@@ -26,19 +26,25 @@ class DSession{
         }
 
     private:
+        // prevent copying
+        DSession(const DSession& other);
+        DSession(DSession&& other);
+        DSession& operator=(const DSession& other);
+
+
         void init_curl(const char *const url, SessionType t){
             m_curl = curl_easy_init();
+            std::cout << curl_version() << std::endl;
             curl_easy_setopt(m_curl, CURLOPT_URL, url);
-#ifdef TEST
-            curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
-#endif 
             curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
+#ifdef TEST /////////////////////////////////////////////
+            curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
+#endif      /////////////////////////////////////////////
 
             if(t == SessionType::http){
                 curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
                 curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_http);
                 curl_easy_setopt(m_curl, CURLOPT_XFERINFOFUNCTION, ProgressBar(m_curl).dfunc());
-
             }
         }
 

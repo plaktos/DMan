@@ -1,4 +1,5 @@
-bin_PROGRAMS=dman test
+bin_PROGRAMS=dman 
+EXTRA_PROGRAMS=test
 dman_SOURCES=src/main.cpp src/downman.cpp
 dman_LDADD = @LIBCURL@
 dman_CPPFLAGS = @LIBCURL_CPPFLAGS@

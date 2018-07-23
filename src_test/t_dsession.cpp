@@ -17,3 +17,10 @@ TEST_CASE("DSession txt download", "[download]"){
     REQUIRE(s.start());
 
 }
+
+TEST_CASE("DSession continuable download start", "[download_cont]"){
+    const char* url = "https://github.com/plaktos/DMan/raw/master/res_test/10mb_random";
+    DSession::SessionType t = DSession::SessionType::http_cont;
+    DSession s(url, t);
+    REQUIRE(s.start());
+}

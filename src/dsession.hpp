@@ -4,6 +4,8 @@
 #include <curl/curl.h>
 #include <iostream>
 
+#include "progressbar.hpp"
+
 class DSession{
     public:
         enum class SessionType{
@@ -27,11 +29,16 @@ class DSession{
         void init_curl(const char *const url, SessionType t){
             m_curl = curl_easy_init();
             curl_easy_setopt(m_curl, CURLOPT_URL, url);
+#ifdef TEST
             curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
+#endif 
+            curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
 
             if(t == SessionType::http){
                 curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
                 curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, write_http);
+                curl_easy_setopt(m_curl, CURLOPT_XFERINFOFUNCTION, ProgressBar(m_curl).dfunc());
+
             }
         }
 

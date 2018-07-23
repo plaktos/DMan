@@ -15,4 +15,5 @@ TEST_CASE("DSession txt download", "[download]"){
     DSession::SessionType t = DSession::SessionType::http;
     DSession s(url, t);
     REQUIRE(s.start());
+
 }

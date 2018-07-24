@@ -11,7 +11,7 @@ class ProgressBar{
         : m_t_lastrun(), m_pcurl(cp),m_progfunc(pf), m_timeprintinterval(timepinterval)
         {
             if(!pf)
-                (curl_progress_f_proto)&ProgressBar::default_prog_func;
+                pf = reinterpret_cast<curl_progress_f_proto>(&ProgressBar::default_prog_func);
         }
 
         curl_progress_f_proto dfunc(){ return m_progfunc; }

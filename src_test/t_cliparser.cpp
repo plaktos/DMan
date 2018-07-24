@@ -11,7 +11,7 @@ TEST_CASE("CliParser parsing", "[parsing]") {
     argv[2] = "arg2";
     argv[3] = "arg3";
 
-    std::deque<char*> cp(CliParser<std::deque<char*>>(argc, argv)());
+    std::deque<char*> cp(CliParser<std::deque<char*>>()(argc,argv));
 
     REQUIRE( cp.front() == "arg1" );
     cp.pop_front();

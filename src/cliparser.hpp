@@ -29,11 +29,8 @@ struct has_reserve<T,
 template<typename T>
 class CliParser{
     public:
-        CliParser(const int argc, const char * const * const argv)
-        : m_argc(argc), m_argv(argv)
-        {;}
-
-        T operator()() { return parse(m_argc, m_argv); }
+        CliParser(){;}
+        T operator()(const int argc, const char * const * const argv) { return parse(argc, argv); }
 
     private:
         // Prevent copying by moving ctors to private
@@ -50,18 +47,26 @@ class CliParser{
         //          constexpr(has_reserve<T>::value) {
         //          }
         //      }
-        //
+
         // Dummy reserve if the container doesnt support reserve
         template<typename U>
         void opt_reserve(U& /*_*/, std::size_t /*_*/,
-                    std::enable_if_t<!std::is_same<U,bool>::value, int> dummy = {} )
-            {;} 
+                    std::enable_if_t<!has_reserve<U>::value, int> dummy = {} )
+            {
+#ifdef TEST ////////////////////////////////////////
+                std::cout << "Reserve not supported" << std::endl;
+#endif// TEST /////////////////////////////////////
+            } 
 
         // Reserve function if the container supports it
         template<typename U>
-        void opt_reserve(U& t, std::size_t s,
-                    typename std::enable_if_t<std::is_same<U,bool>::value, int> dummy = {})
-            { t.reserve(t.size() + s); }
+        void opt_reserve(U& u, std::size_t s,
+                    std::enable_if_t<has_reserve<U>::value, int> dummy = {})
+            { 
+#ifdef TEST ////////////////////////////////////////
+                std::cout << "Reserve supported" << std::endl;
+#endif// TEST /////////////////////////////////////
+                u.reserve(u.size() + s); }
 
         T parse(const int argc, const char * const * const argv){
             //-TODO switch to CLI11 later
@@ -72,9 +77,6 @@ class CliParser{
 
             return container;
         }
-
-        const int m_argc;
-        const char* const * const m_argv;
 };
 
 

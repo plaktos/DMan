@@ -3,7 +3,7 @@
 DownMan::DownMan(const int argc,const char* const * const argv)
 : m_statuscode(StatusCode::OKAY),
     m_errorstring(),
-    m_urllist(CliParser<std::deque<char*>>(argc,argv)()) {
+    m_urllist(CliParser<std::deque<char*>>()(argc,argv)) {
     if(m_urllist.empty()){
         m_statuscode = StatusCode::ERROR;
         m_errorstring = "CliParser couldn't create url list";

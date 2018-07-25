@@ -1,3 +1,6 @@
+#ifndef H_PROGRESSBAR
+#define H_PROGRESSBAR
+
 #include <curl/curl.h>
 #include <stdio.h>
 
@@ -14,7 +17,7 @@ class ProgressBar{
                 pf = reinterpret_cast<curl_progress_f_proto>(&ProgressBar::default_prog_func);
         }
 
-        curl_progress_f_proto dfunc(){ return m_progfunc; }
+        curl_progress_f_proto bar_display_func(){ return m_progfunc; }
 
     private:
         // prevent copying
@@ -49,3 +52,5 @@ class ProgressBar{
         int m_timeprintinterval;
 
 };
+
+#endif // H_PROGRESSBAR

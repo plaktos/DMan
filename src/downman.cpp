@@ -15,7 +15,7 @@ DownMan::start(){
     std::deque<char*>::const_iterator iter = m_urllist.begin();
     for(;iter != m_urllist.end(); ++iter){
         //-TODO support for different protocols based on cli arguments
-        if(!DSession(*iter, DSession::SessionType::http).start()){
+        if(!HTTPSession(*iter).start()){
             m_statuscode = StatusCode::ERROR;
             m_errorstring = "DSession error";
             break;

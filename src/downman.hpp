@@ -7,7 +7,8 @@
 #include <curl/curl.h>
 
 #include "cliparser.hpp"
-#include "dsession.hpp"
+#include "httpsession.hpp"
+#include "httpcsession.hpp"
 
 class DownMan{
     public:

@@ -12,13 +12,14 @@ class HTTPCSession
     //////
     public:
         HTTPCSession(const char* url) : DSession(){
-            m_filename = get_filename(url);
+            m_progressbar = std::make_unique<ProgressBar>(m_curl, get_filename(url));
             curl_easy_setopt(m_curl, CURLOPT_URL, url);
             //-TODO option to show progress or not
             curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
             curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
+            curl_easy_setopt(m_curl, CURLOPT_XFERINFODATA, m_progressbar.get());
             curl_easy_setopt(m_curl, CURLOPT_XFERINFOFUNCTION,
-                    ProgressBar(m_curl).bar_display_func());
+                    m_progressbar->bar_display_func());
 
             long last_written = find_last_written_byte();
             curl_easy_setopt(m_curl,
@@ -31,7 +32,7 @@ class HTTPCSession
         {;}
 
         bool start(){
-            curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, init_file(m_filename));
+                curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, init_file(m_inprogfilename.c_str()));
             if(!curl_easy_perform(m_curl)){
                 // If download succeeded rename file from .downloading
                 //-TODO have a .dman folder keep track of downloaded files
@@ -62,9 +63,9 @@ class HTTPCSession
             ++lastbs;
             if(*lastbs){
                 m_filename = lastbs;
-                std::string retfn(m_filename);
-                retfn.append(".downloading");
-                return retfn.c_str();
+                m_inprogfilename = m_filename;
+                m_inprogfilename.append(".downloading");
+                return m_filename;
             }
             return nullptr;
         }
@@ -75,10 +76,15 @@ class HTTPCSession
             }
 
         long find_last_written_byte(){
-            fseek(m_file, 0L, SEEK_END);  
-            int last_written = ftell(m_file);
-            rewind(m_file);
-            return last_written;
+            std::unique_ptr<FILE> f(fopen(m_inprogfilename.c_str(), "r"));
+            if(!f.get())
+                return 0L;
+
+            fseek(f.get(), 0L, SEEK_END);  
+            return ftell(f.get());
         }
+
+        std::unique_ptr<ProgressBar> m_progressbar;
+        std::string m_inprogfilename;
 };
 #endif // H_HTTPCSESSION

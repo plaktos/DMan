@@ -13,11 +13,13 @@ class HTTPSession
     public:
         HTTPSession(const char* url) : DSession(){
             m_filename = get_filename(url);
+            m_progressbar = std::make_unique<ProgressBar>(m_curl, m_filename);
             curl_easy_setopt(m_curl, CURLOPT_URL, url);
             curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
             curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
+            curl_easy_setopt(m_curl, CURLOPT_XFERINFODATA, m_progressbar.get());
             curl_easy_setopt(m_curl, CURLOPT_XFERINFOFUNCTION,
-                    ProgressBar(m_curl).bar_display_func());
+                    m_progressbar->bar_display_func());
         }
 
         ~HTTPSession()
@@ -54,5 +56,7 @@ class HTTPSession
             write_data(void *ptr, size_t size, size_t nmemb, void* stream){
                 return fwrite(ptr, size, nmemb, (FILE *)stream);
             }
+
+        std::unique_ptr<ProgressBar> m_progressbar;
 };
 #endif // H_HTTPSESSION

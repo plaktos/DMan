@@ -22,10 +22,7 @@ class HTTPSession
                     m_progressbar->bar_display_func());
         }
 
-        ~HTTPSession()
-        {;}
-
-        bool start(){
+        bool start() override {
             curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, init_file(m_filename));
             if(!curl_easy_perform(m_curl))
                 return true;
@@ -35,12 +32,12 @@ class HTTPSession
 
     private:
 
-        FILE* init_file(const char* fn){
-            m_file = fopen(m_filename, "wb");
+        FILE* init_file(const char* fn) override {
+            m_file = fopen(fn, "wb");
             return m_file;
         }
 
-        const char* get_filename(const char* url){
+        const char* get_filename(const char* url) override {
             //-TODO request filename
             while(*url++)
                 if(*url== '/')
@@ -52,8 +49,8 @@ class HTTPSession
             return nullptr;
         }
 
-        static size_t
-            write_data(void *ptr, size_t size, size_t nmemb, void* stream){
+        size_t
+            write_data(void *ptr, size_t size, size_t nmemb, void* stream) override {
                 return fwrite(ptr, size, nmemb, (FILE *)stream);
             }
 

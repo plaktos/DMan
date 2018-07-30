@@ -1,24 +1,20 @@
 #include "downman.hpp"
 
 DownMan::DownMan(const int argc,const char* const * const argv)
-: m_statuscode(StatusCode::OKAY),
-    m_errorstring(),
-    m_urllist(CliParser<std::deque<char*>>()(argc,argv)) {
-    if(m_urllist.empty()){
-        m_statuscode = StatusCode::ERROR;
-        m_errorstring = "CliParser couldn't create url list";
-    }
+: m_statuscode(StatusCode::OKAY), m_errorstring(),
+    m_cliparser()  {
+           m_urllist = m_cliparser.parse(argc,argv);
 }
 
 void
 DownMan::start(){
-    std::deque<char*>::const_iterator iter = m_urllist.begin();
-    for(;iter != m_urllist.end(); ++iter){
-        //-TODO support for different protocols based on cli arguments
-        if(!HTTPSession(*iter).start()){
-            m_statuscode = StatusCode::ERROR;
-            m_errorstring = "DSession error";
-            break;
+    for(const auto& url : m_urllist){
+        if(m_cliparser.flag_continue()){
+            HTTPCSession s(url);
+            s.start();
+        } else {
+            HTTPSession s(url);
+            s.start();
         }
     }
 }

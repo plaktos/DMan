@@ -4,17 +4,18 @@
 #include <curl/curl.h>
 #include <stdio.h>
 #include <cstring>
+#include <string>
 
-typedef int (*curl_progress_f_proto)(void*,curl_off_t, curl_off_t,
-                curl_off_t, curl_off_t);
 
 class ProgressBar{
     public:
-        ProgressBar(CURL* cp, const char *const fn,
-                int timepinterval = {5}, curl_progress_f_proto pf = 0)
-        : m_t_lastrun(), m_pcurl(cp), m_progfunc(pf),
+    using curl_progress_f_proto = int (*)(void*,curl_off_t, curl_off_t,
+                curl_off_t, curl_off_t);
+
+        ProgressBar(CURL* cp, const char *const fn, double dloffset = 0, int timepinterval = 5, curl_progress_f_proto pf = 0)
+        : m_t_lastrun(0), m_pcurl(cp), 
         m_filename(fn), m_timeprintinterval(timepinterval),
-        f_dltotal(), f_dlnow()
+        f_dltotal(0), f_dlnow(0), m_dloffset(dloffset)
         {  
             if(!pf)
                 m_progfunc = &default_prog_func;
@@ -24,12 +25,10 @@ class ProgressBar{
 
         curl_progress_f_proto bar_display_func(){ return m_progfunc; }
 
-    private:
         // prevent copying
-        ProgressBar(const ProgressBar& other);
-        ProgressBar(ProgressBar&& other);
-        ProgressBar&
-            operator=(const ProgressBar& other);
+        ProgressBar(const ProgressBar& other) = delete;
+        ProgressBar(ProgressBar&& other) = delete;
+        ProgressBar& operator=(const ProgressBar& other) = delete;
 
         // Default progressbar; can be switched out by passing a 
         // function ptr to the constructor
@@ -38,20 +37,12 @@ class ProgressBar{
                 curl_off_t ultotal, curl_off_t ulnow){
             ;
             ProgressBar* pb = (ProgressBar*)clientp;
-            curl_off_t currtime;
-            curl_easy_getinfo(pb->m_pcurl, CURLINFO_TOTAL_TIME_T, currtime);
-
-            if((currtime - pb->m_t_lastrun) >= pb->m_timeprintinterval){
-                pb->m_t_lastrun = currtime;
-                printf("Total Time: %f \n", currtime);
-            }
-
             std::strcpy(pb->dlnow_dtype,"B"); std::strcpy(pb->dltotal_dtype,"B");
-            pb->f_dltotal = dltotal;
+            pb->f_dltotal = dltotal + pb->m_dloffset;
             if(pb->f_dltotal > 1024){pb->f_dltotal /= 1024; std::strcpy(pb->dltotal_dtype,"KB");
                 if(pb->f_dltotal > 1024){pb->f_dltotal /= 1024; std::strcpy(pb->dltotal_dtype,"MB");}
             }
-            pb->f_dlnow = dlnow;
+            pb->f_dlnow = dlnow + pb->m_dloffset;
             if(pb->f_dlnow > 1024){ pb->f_dlnow /= 1024; std::strcpy(pb->dlnow_dtype,"KB");
                 if(pb->f_dlnow > 1024){pb->f_dlnow /= 1024; std::strcpy(pb->dlnow_dtype,"MB");}
             }
@@ -75,6 +66,7 @@ class ProgressBar{
         char dlnow_dtype[255];
         double f_dltotal;
         double f_dlnow;
+        double m_dloffset;
 };
 
 #endif // H_PROGRESSBAR

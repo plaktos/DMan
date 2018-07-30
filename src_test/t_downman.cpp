@@ -11,13 +11,9 @@ TEST_CASE("DownMan creation", "[creation]"){
     argv[3] = "arg3";
 
     DownMan dm(argc, argv);
-    std::deque<char*> ul(dm.url_list());
+    std::vector<char*> ul(dm.url_list());
 
-    REQUIRE( ul.front() == "arg1" );
-    ul.pop_front();
-
-    REQUIRE( ul.front() == "arg2" );
-    ul.pop_front();
-
-    REQUIRE( ul.front() == "arg3" );
+    REQUIRE( ul[0] == "arg1" );
+    REQUIRE( ul[1] == "arg2" );
+    REQUIRE( ul[2] == "arg3" );
 }

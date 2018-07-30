@@ -2,7 +2,7 @@
 
 #include "../include/catch.hpp"
 #include "../src/cliparser.hpp"
-#include <deque>
+#include <vector>
 
 TEST_CASE("CliParser parsing", "[parsing]") {
     const char* argv[4];
@@ -11,14 +11,11 @@ TEST_CASE("CliParser parsing", "[parsing]") {
     argv[2] = "arg2";
     argv[3] = "arg3";
 
-    std::deque<char*> cp(CliParser<std::deque<char*>>()(argc,argv));
+    CliParser<std::vector<char*>> cp;
+    std::vector<char*> v(cp.parse(argc,argv));
 
-    REQUIRE( cp.front() == "arg1" );
-    cp.pop_front();
-
-    REQUIRE( cp.front() == "arg2" );
-    cp.pop_front();
-
-    REQUIRE( cp.front() == "arg3" );
+    REQUIRE( v[0] == "arg1" );
+    REQUIRE( v[1] == "arg2" );
+    REQUIRE( v[2] == "arg3" );
 }
 

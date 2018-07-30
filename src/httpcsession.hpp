@@ -12,33 +12,31 @@ class HTTPCSession
     //////
     public:
         HTTPCSession(const char* url) : DSession(){
-            m_progressbar = std::make_unique<ProgressBar>(m_curl, get_filename(url));
+            get_filename(url);
+            m_lastwritten = find_last_written_byte();
+            m_progressbar = std::make_unique<ProgressBar>(m_curl, m_filename, m_lastwritten);
+
             curl_easy_setopt(m_curl, CURLOPT_URL, url);
             //-TODO option to show progress or not
             curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
             curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
-            curl_easy_setopt(m_curl, CURLOPT_XFERINFODATA, m_progressbar.get());
-            curl_easy_setopt(m_curl, CURLOPT_XFERINFOFUNCTION,
-                    m_progressbar->bar_display_func());
 
-            long last_written = find_last_written_byte();
             curl_easy_setopt(m_curl,
-                    last_written > 2147483648 ?
+                    m_lastwritten > 2147483648 ?
                         CURLOPT_RESUME_FROM_LARGE : CURLOPT_RESUME_FROM,
-                    last_written);
+                    m_lastwritten);
+
+            curl_easy_setopt(m_curl, CURLOPT_XFERINFODATA,
+                    m_progressbar.get());
+            curl_easy_setopt(m_curl, CURLOPT_XFERINFOFUNCTION, m_progressbar->bar_display_func());
         }
 
-        ~HTTPCSession()
-        {;}
-
-        bool start(){
+        bool start() override {
                 curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, init_file(m_inprogfilename.c_str()));
             if(!curl_easy_perform(m_curl)){
                 // If download succeeded rename file from .downloading
                 //-TODO have a .dman folder keep track of downloaded files
-                std::string fn(m_filename);
-                rename(m_filename, fn.substr(0,
-                            fn.find_last_of('.')).c_str());
+                rename(m_inprogfilename.c_str(), m_filename);
                 return true;
             }
             //-TODO return status codes. so we can log
@@ -49,12 +47,12 @@ class HTTPCSession
 
     private:
 
-        FILE* init_file(const char* fn){
-            m_file = fopen(m_filename, "a+b");
+        FILE* init_file(const char* fn) override {
+            m_file = fopen(fn, "ab");
             return m_file;
         }
 
-        const char* get_filename(const char* url){
+        const char* get_filename(const char* url) override {
             //-TODO request filename
             const char* lastbs;
             while(*url++)
@@ -70,21 +68,24 @@ class HTTPCSession
             return nullptr;
         }
 
-        static size_t
-            write_data(void *ptr, size_t size, size_t nmemb, void* stream){
+        size_t
+            write_data(void *ptr, size_t size, size_t nmemb, void* stream) override {
                 return fwrite(ptr, size, nmemb, (FILE *)stream);
             }
 
         long find_last_written_byte(){
-            std::unique_ptr<FILE> f(fopen(m_inprogfilename.c_str(), "r"));
+            std::unique_ptr<FILE, decltype(&fclose)> f(fopen(m_inprogfilename.c_str(), "r"), &fclose);
             if(!f.get())
                 return 0L;
 
             fseek(f.get(), 0L, SEEK_END);  
-            return ftell(f.get());
+            long ret = ftell(f.get());
+            
+            return ret;
         }
 
         std::unique_ptr<ProgressBar> m_progressbar;
         std::string m_inprogfilename;
+        long m_lastwritten;
 };
 #endif // H_HTTPCSESSION

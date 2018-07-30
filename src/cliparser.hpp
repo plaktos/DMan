@@ -1,7 +1,8 @@
 #ifndef H_CLIPARSER
 #define H_CLIPARSER
 
-#include "../include/CLI11.hpp"
+#include <iostream>
+#include <string.h>
 
 #ifndef T_HAS_RESERVE
 #define T_HAS_RESERVE
@@ -29,14 +30,15 @@ struct has_reserve<T,
 template<typename T>
 class CliParser{
     public:
-        CliParser(){;}
-        T operator()(const int argc, const char * const * const argv) { return parse(argc, argv); }
+        CliParser() : m_flag_continue(0){;}
+        T parse(const int argc, const char * const * const argv);
 
+        CliParser(const CliParser&) = delete;
+        CliParser(CliParser&&) = delete;
+        CliParser& operator=(const CliParser&) = delete;
+
+        bool flag_continue(){return m_flag_continue;}
     private:
-        // Prevent copying by moving ctors to private
-        CliParser(const CliParser& other);
-        CliParser(CliParser&& other);
-        CliParser& operator=(const CliParser& other);
 
 
         // Solved enable_if overloading not working inside the class
@@ -68,16 +70,18 @@ class CliParser{
 #endif// TEST /////////////////////////////////////
                 u.reserve(u.size() + s); }
 
-        T parse(const int argc, const char * const * const argv){
-            //-TODO switch to CLI11 later
-            T container;
-            opt_reserve<T>(container, argc - 1);
-            for(int i = 1; i < argc; ++i)
-                container.insert( container.end(), typename T::value_type(argv[i]));
-
-            return container;
-        }
+        bool m_flag_continue;
 };
 
+template<typename T>
+T CliParser<T>::parse(const int argc, const char * const * const argv){
+    T container;
+    opt_reserve<T>(container, argc - 1);
+    for(int i = 1; i < argc; ++i){
+        if(strcmp(argv[i], "-c")==0){ m_flag_continue = true; continue; }
+        container.insert( container.end(), typename T::value_type(argv[i]));
+    }
+    return container;
+}
 
 #endif // H_CLIPARSER

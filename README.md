@@ -7,7 +7,9 @@ DMan is a download manager written in C++, using libcurl. It is made only for le
 
 #### Current state
 
-**Version 0.1.0**
- * Download files over http.
+**Version 0.2.0**
+ * Download files over http/ftp.
  * URLs provided through the command line.
+ * -c command line argument for the ability to continue canceled downloads
+ * -t command line argument for concurrent downloads
 

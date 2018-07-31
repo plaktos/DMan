@@ -12,8 +12,8 @@ class HTTPSession
     //////
     public:
         HTTPSession(const char* url) : DSession(){
-            m_filename = get_filename(url);
-            m_progressbar = std::make_unique<ProgressBar>(m_curl, m_filename);
+            get_filename(url);
+            m_progressbar = std::make_unique<ProgressBar>(m_curl, m_filename.c_str());
             curl_easy_setopt(m_curl, CURLOPT_URL, url);
             curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
             curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -23,7 +23,7 @@ class HTTPSession
         }
 
         bool start() override {
-            curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, init_file(m_filename));
+            curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, init_file(m_filename.c_str()));
             if(!curl_easy_perform(m_curl))
                 return true;
             return false;
@@ -39,20 +39,19 @@ class HTTPSession
 
         const char* get_filename(const char* url) override {
             //-TODO request filename
-            while(*url++)
+            const char* cs;
+            while(*url++ && *(url+1))
                 if(*url== '/')
-                    m_filename = url;
-            ++m_filename;
-            if(*m_filename){
-                return m_filename;
+                    cs = url;
+            cs++;
+            if(*cs){
+                m_filename = cs;
+                if(m_filename.back() == '/')
+                    m_filename.pop_back();
+                return m_filename.c_str();
             }
             return nullptr;
         }
-
-        size_t
-            write_data(void *ptr, size_t size, size_t nmemb, void* stream) override {
-                return fwrite(ptr, size, nmemb, (FILE *)stream);
-            }
 
         std::unique_ptr<ProgressBar> m_progressbar;
 };

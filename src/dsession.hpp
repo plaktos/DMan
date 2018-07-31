@@ -11,7 +11,7 @@ class DSession{
     public:
         using write_data_f_proto = size_t (*)(void*,size_t,size_t,void*);
 
-        DSession() : m_filename(0), m_curl(curl_easy_init()), m_file(0){
+        DSession() : m_filename(), m_curl(curl_easy_init()), m_file(0){
 #ifdef TEST /////////////////////////////////////////////
             curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
 #endif      /////////////////////////////////////////////
@@ -30,9 +30,8 @@ class DSession{
     protected:
         virtual FILE* init_file(const char* fn) = 0;
         virtual const char* get_filename(const char* url) = 0;
-        virtual size_t write_data (void*,size_t,size_t,void*) = 0;
 
-        const char* m_filename;
+        std::string m_filename;
         CURL* m_curl;
         FILE* m_file;
 };

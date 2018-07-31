@@ -30,7 +30,7 @@ struct has_reserve<T,
 template<typename T>
 class CliParser{
     public:
-        CliParser() : m_flag_continue(0){;}
+        CliParser() : m_flag_continue(0), m_flag_threads(0) {;}
         T parse(const int argc, const char * const * const argv);
 
         CliParser(const CliParser&) = delete;
@@ -38,6 +38,7 @@ class CliParser{
         CliParser& operator=(const CliParser&) = delete;
 
         bool flag_continue(){return m_flag_continue;}
+        bool flag_threads(){return m_flag_threads;}
     private:
 
 
@@ -54,23 +55,17 @@ class CliParser{
         template<typename U>
         void opt_reserve(U& /*_*/, std::size_t /*_*/,
                     std::enable_if_t<!has_reserve<U>::value, int> dummy = {} )
-            {
-#ifdef TEST ////////////////////////////////////////
-                std::cout << "Reserve not supported" << std::endl;
-#endif// TEST /////////////////////////////////////
-            } 
+            {;} 
 
         // Reserve function if the container supports it
         template<typename U>
         void opt_reserve(U& u, std::size_t s,
                     std::enable_if_t<has_reserve<U>::value, int> dummy = {})
             { 
-#ifdef TEST ////////////////////////////////////////
-                std::cout << "Reserve supported" << std::endl;
-#endif// TEST /////////////////////////////////////
                 u.reserve(u.size() + s); }
 
         bool m_flag_continue;
+        bool m_flag_threads;
 };
 
 template<typename T>
@@ -79,6 +74,7 @@ T CliParser<T>::parse(const int argc, const char * const * const argv){
     opt_reserve<T>(container, argc - 1);
     for(int i = 1; i < argc; ++i){
         if(strcmp(argv[i], "-c")==0){ m_flag_continue = true; continue; }
+        if(strcmp(argv[i], "-t")==0){ m_flag_threads = true; continue; }
         container.insert( container.end(), typename T::value_type(argv[i]));
     }
     return container;

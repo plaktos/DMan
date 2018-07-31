@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <thread>
 #include <curl/curl.h>
 
 #include "cliparser.hpp"
@@ -27,11 +28,14 @@ class DownMan{
         void start();
 
     private:
+        void init_sessions();
+
         StatusCode m_statuscode;
         std::string m_errorstring;
 
         CliParser<std::vector<char*>> m_cliparser;
         std::vector<char*> m_urllist;
+        std::vector<std::unique_ptr<DSession>> m_sessions;
 };
 
 #endif //  H_DOWNMAN

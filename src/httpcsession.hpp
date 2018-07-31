@@ -14,7 +14,7 @@ class HTTPCSession
         HTTPCSession(const char* url) : DSession(){
             get_filename(url);
             m_lastwritten = find_last_written_byte();
-            m_progressbar = std::make_unique<ProgressBar>(m_curl, m_filename, m_lastwritten);
+            m_progressbar = std::make_unique<ProgressBar>(m_curl, m_filename.c_str(), m_lastwritten);
 
             curl_easy_setopt(m_curl, CURLOPT_URL, url);
             //-TODO option to show progress or not
@@ -32,11 +32,11 @@ class HTTPCSession
         }
 
         bool start() override {
-                curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, init_file(m_inprogfilename.c_str()));
+            curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, init_file(m_inprogfilename.c_str()));
             if(!curl_easy_perform(m_curl)){
                 // If download succeeded rename file from .downloading
                 //-TODO have a .dman folder keep track of downloaded files
-                rename(m_inprogfilename.c_str(), m_filename);
+                rename(m_inprogfilename.c_str(), m_filename.c_str());
                 return true;
             }
             //-TODO return status codes. so we can log
@@ -54,24 +54,21 @@ class HTTPCSession
 
         const char* get_filename(const char* url) override {
             //-TODO request filename
-            const char* lastbs;
-            while(*url++)
-                if(*url== '/')
-                    lastbs = url;
-            ++lastbs;
-            if(*lastbs){
-                m_filename = lastbs;
+            const char* cs;
+            while(*url++ && *(url+1))
+                if(*url == '/')
+                    cs = url;
+            cs++;
+            if(*cs){
+                m_filename = cs;
+                if(m_filename.back() == '/')
+                    m_filename.pop_back();
                 m_inprogfilename = m_filename;
                 m_inprogfilename.append(".downloading");
-                return m_filename;
+                return m_filename.c_str();
             }
             return nullptr;
         }
-
-        size_t
-            write_data(void *ptr, size_t size, size_t nmemb, void* stream) override {
-                return fwrite(ptr, size, nmemb, (FILE *)stream);
-            }
 
         long find_last_written_byte(){
             std::unique_ptr<FILE, decltype(&fclose)> f(fopen(m_inprogfilename.c_str(), "r"), &fclose);
